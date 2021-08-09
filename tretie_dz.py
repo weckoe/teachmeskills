@@ -35,7 +35,7 @@ from datetime import datetime, timedelta, date
 datetime_today = datetime.today()
 users_birthday = input("Введите свою дату рождения: ")
 converted_user_data = datetime.strptime(users_birthday, "%d.%m.%Y")
-this_year_birthday = datetime(2021, converted_user_data.month, converted_user_data.day)
+this_year_birthday = datetime(datetime_today.year, converted_user_data.month, converted_user_data.day)
 
 
 def years_old(users_input, todays_date):
