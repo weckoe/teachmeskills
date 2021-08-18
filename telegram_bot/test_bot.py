@@ -1,11 +1,16 @@
 import telebot
 from telebot import types
+import csv
+import os
+
+from urllib3.filepost import writer
 
 API_TOKEN = "1827046423:AAEtXx9tssHYBpsWn1fx11s_CKox538GeqU"
 
 bot = telebot.TeleBot(API_TOKEN)
 
 users = {}
+
 
 
 def is_valid_name_surname(name_surname):
@@ -20,8 +25,9 @@ def start(message):
         users[user_id] = {}
         remove_initial_keyboard(user_id, "Как тебя зовут?")
         bot.register_next_step_handler(message, get_name)
-    elif message.text == "Логин":
-        remove_initial_keyboard(user_id, "Логин я сделаю дома :)")
+    elif message.text == "Создание ToDo":
+        remove_initial_keyboard(user_id, "Введите название задания:")
+        bot.register_next_step_handler(message, to_do)
     else:
         render_initial_keyboard(user_id)
 
@@ -29,6 +35,7 @@ def start(message):
 def get_name(message):
     user_id = message.from_user.id
     name = message.text.title()
+
     if is_valid_name_surname(name):
         users[user_id]["name"] = name.title()
         bot.send_message(user_id, "Какая у тебя фамилия?")
@@ -51,6 +58,8 @@ def get_surname(message):
 
 
 def get_age(message):
+    csv_dir = os.path.join("test_files", "csv")
+    file_path_1 = os.path.join(csv_dir, "test.csv")
     age_text = message.text
     user_id = message.from_user.id
     if age_text.isdigit():
@@ -64,6 +73,11 @@ def get_age(message):
             surname = users[user_id]["surname"]
             question = f"Тебе {age} лет и тебя зовут {name} {surname}?"
             render_yes_now_keyboard(user_id, question, "reg")
+            with open(file_path_1, "a") as csv_file:
+                names = ["id", "name", "surname", "age"]
+                writer = csv.DictWriter(csv_file, fieldnames=names)
+                writer.writeheader()
+                writer.writerow({"id": user_id, "name": name, "surname": surname, "age": age})
     else:
         bot.send_message(user_id, "Введите цифрами, пожалуйста")
         bot.register_next_step_handler(message, get_age)
@@ -93,14 +107,47 @@ def render_yes_now_keyboard(user_id: int, question: str, prefix: str):
 def render_initial_keyboard(user_id: int):
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     register_button = types.KeyboardButton("Регистрация")
-    login_button = types.KeyboardButton("Логин")
-    keyboard.add(register_button, login_button)
+    todo_button = types.KeyboardButton("Создание ToDo")
+    keyboard.add(register_button, todo_button)
     bot.send_message(user_id, "Выберите действие", reply_markup=keyboard)
 
 
 def remove_initial_keyboard(user_id: int, message: str):
     keyboard = types.ReplyKeyboardRemove()
     bot.send_message(user_id, message, reply_markup=keyboard)
+
+
+csv_dir = os.path.join("test_files", "csv")
+file_path_2 = os.path.join(csv_dir, "todo.csv")
+names = [ "user_id", "todo_text", "date"]
+
+def to_do(message):
+    user_id = message.from_user.id
+    todo_text = message.text
+    bot.send_message(user_id, "Введите дату:")
+    bot.register_next_step_handler(message, user_date, todo_text)
+
+
+def user_date(message, todo_text):
+    user_id = message.from_user.id
+    from datetime import datetime
+    message_date = message.text
+    date = datetime.strptime(message_date, "%d.%m.%Y")
+    with open(file_path_2, "a") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=names)
+        writer.writeheader()
+        writer.writerow({"user_id": user_id, "todo_text": todo_text, "date":date})
+    with open(file_path_2, "r") as csv_file:
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            question = f'Задание: {row["todo_text"]}, дата: {row["date"]}'
+    render_yes_now_keyboard(user_id, question, "reg")
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
