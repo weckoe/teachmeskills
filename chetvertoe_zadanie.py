@@ -25,8 +25,8 @@ main_function()
 
 dictionary = {}
 
-def decorator(url = ""):
-    def wrapper_1(func):
+def decorator(url = ""):#переменные
+    def wrapper_1(func):#функция
         def wrapper_2():
             
             dictionary[url] = func.__name__
