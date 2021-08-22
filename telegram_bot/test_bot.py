@@ -144,11 +144,7 @@ def user_date(message, todo_text):
     render_yes_now_keyboard(user_id, question, "reg")
 
 
-
-
-
-
-
+#61 19:31
 
 if __name__ == "__main__":
     bot.polling(none_stop=True)
