@@ -1,19 +1,8 @@
-import telebot
 import csv
-import os
 
-from main_features import csv_viewing
-from telebot import types
-from datetime import datetime
-
-
-API_TOKEN = "1827046423:AAEtXx9tssHYBpsWn1fx11s_CKox538GeqU"
-bot = telebot.TeleBot(API_TOKEN)
-
-csv_dir = os.path.join("test_files", "csv")
-FILE_PATH_2 = os.path.join(csv_dir, "todo.csv")
-FILE_PATH_1 = os.path.join(csv_dir, "test.csv")
-NAMES = ["user_id", "todo_text", "date"]
+from main_features import to_do, check_todo_file
+from keyboard import render_yes_now_keyboard, render_initial_keyboard, remove_initial_keyboard
+from constants import bot, FILE_PATH_1
 
 users = {}
 
@@ -101,62 +90,7 @@ def callback_worker(call):
         render_initial_keyboard(user_id)
 
 
-def render_yes_now_keyboard(user_id: int, question: str, prefix: str):
-    keyboard = types.InlineKeyboardMarkup()
-    key_yes = types.InlineKeyboardButton(text="Да", callback_data=f"{prefix}_yes")
-    keyboard.add(key_yes)
-    key_no = types.InlineKeyboardButton(text="Нет", callback_data=f"{prefix}_no")
-    keyboard.add(key_no)
-    bot.send_message(user_id, text=question, reply_markup=keyboard)
-
-
-def render_initial_keyboard(user_id: int):
-    keyboard = types.ReplyKeyboardMarkup(row_width=4, resize_keyboard=True)
-    register_button = types.KeyboardButton("Регистрация")
-    login_button = types.KeyboardButton("Логин")
-    keyboard.add(register_button, login_button)
-    todo_button = types.KeyboardButton("Создание ToDo")
-    keyboard.add(register_button, todo_button)
-    today_todo = types.KeyboardButton("ToDo на сегодня")
-    keyboard.add(register_button, today_todo)
-    bot.send_message(user_id, "Выберите действие", reply_markup=keyboard)
-
-
-def remove_initial_keyboard(user_id: int, message: str):
-    keyboard = types.ReplyKeyboardRemove()
-    bot.send_message(user_id, message, reply_markup=keyboard)
-
-
-def to_do(message):
-    user_id = message.from_user.id
-    todo_text = message.text
-    bot.send_message(user_id, "Введите дату:")
-    bot.register_next_step_handler(message, user_date, todo_text)
-
-
-def user_date(message, todo_text):
-    user_id = message.from_user.id
-    message_date = message.text
-    with open(FILE_PATH_2, "a") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=NAMES)
-        writer.writeheader()
-        writer.writerow({"user_id": user_id, "todo_text": todo_text, "date": message_date})
-    with open(FILE_PATH_2, "r") as csv_file:
-        reader = csv.DictReader(csv_file)
-        for row in reader:
-            question = f'Задание: {row["todo_text"]}, дата: {row["date"]}'
-    render_yes_now_keyboard(user_id, question, "reg")
-
-def check_todo_file(user_id):
-    if not os.path.exists(FILE_PATH_2):
-        bot.send_message(user_id, "Задач на сегодня нет")
-    else:
-        list_of_todos = csv_viewing(user_id)
-        bot.send_message(user_id, list_of_todos)
-
-
 # 18:32 40
-
 
 
 if __name__ == "__main__":
