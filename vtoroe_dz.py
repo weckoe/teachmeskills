@@ -59,8 +59,8 @@ for user in name_surname:
 logins = {
 	
 }
-for some_login in login_2:
-	logins[login_2] = users
+
+logins[login_2] = users
 
 print(logins)
 
