@@ -79,7 +79,7 @@ def get_age(message):
             with sqlite3.connect(DB_FILE_USERS) as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"""
-                    INSERT INTO "users"(user_id, user_name, user_surname, age)
+                    INSERT INTO users(user_id, user_name, user_surname, age)
                     VALUES ('{user_id}', '{name}', '{surname}', '{age}')
                 """)
     else:
@@ -103,14 +103,13 @@ def making_db():
     with sqlite3.connect(DB_FILE_USERS) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS "users"(
+            CREATE TABLE IF NOT EXISTS users(
             user_id INTEGER PRIMARY KEY,
             user_name VARCHAR(15) NOT NULL,
             user_surname VARCHAR(15) NOT NULL UNIQUE,
             age INTEGER
             )
         """)
-
 
 # 18:32 40
 
