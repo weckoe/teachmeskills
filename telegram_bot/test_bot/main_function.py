@@ -1,17 +1,19 @@
 
 import sqlite3
-import csv
 
-from main_features import to_do, check_todo_file
-from keyboard import render_yes_now_keyboard, render_initial_keyboard, remove_initial_keyboard
-from constants import bot
+
+from keyboard import render_initial_keyboard, remove_initial_keyboard
+from main_features import to_do, check_todo_table
+from models import Users
+from db import Session
+
 
 DB_FILE_USERS = "db/all_users"
 
 users = {}
 
-
-
+from keyboard import render_yes_now_keyboard
+from constants import bot
 
 
 def is_valid_name_surname(name_surname):
@@ -30,7 +32,7 @@ def start(message):
         remove_initial_keyboard(user_id, "Введите название задания:")
         bot.register_next_step_handler(message, to_do)
     elif message.text == "ToDo на сегодня":
-        check_todo_file(user_id)
+        check_todo_table(user_id)
         render_initial_keyboard(user_id)
     else:
         render_initial_keyboard(user_id)
@@ -75,13 +77,12 @@ def get_age(message):
             surname = users[user_id]["surname"]
             question = f"Тебе {age} лет и тебя зовут {name} {surname}?"
             render_yes_now_keyboard(user_id, question, "reg")
-            making_db()
-            with sqlite3.connect(DB_FILE_USERS) as conn:
-                cursor = conn.cursor()
-                cursor.execute(f"""
-                    INSERT INTO users(user_id, user_name, user_surname, age)
-                    VALUES ('{user_id}', '{name}', '{surname}', '{age}')
-                """)
+            session = Session()
+            register_user = Users(id = user_id, user_name = name, user_surname = surname, age = age)
+            session.add(register_user)
+            session.commit()
+            session.close()
+
     else:
         bot.send_message(user_id, "Введите цифрами, пожалуйста")
         bot.register_next_step_handler(message, get_age)
@@ -98,20 +99,6 @@ def callback_worker(call):
         users.pop(user_id, None)
         render_initial_keyboard(user_id)
 
-
-def making_db():
-    with sqlite3.connect(DB_FILE_USERS) as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users(
-            user_id INTEGER PRIMARY KEY,
-            user_name VARCHAR(15) NOT NULL,
-            user_surname VARCHAR(15) NOT NULL UNIQUE,
-            age INTEGER
-            )
-        """)
-
-# 18:32 40
 
 if __name__ == "__main__":
     bot.polling(none_stop=True)
